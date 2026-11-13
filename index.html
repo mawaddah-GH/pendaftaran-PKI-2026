@@ -79,6 +79,21 @@ button[type=submit]:focus-visible{outline:3px solid var(--sun);outline-offset:3p
 button[disabled]{opacity:.6;cursor:wait}
 .foot{text-align:center;color:var(--muted);font-size:13.5px;margin-top:18px}
 .foot a{color:var(--navy);font-weight:800}
+/* bayaran */
+.bank{background:#F4F7FD;border:1.5px dashed #BFD0EE;border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.bank .row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:15px}
+.bank .row span{color:var(--muted);font-weight:700}
+.bank .row b{text-align:right}
+.bank .acc{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.copy{font:inherit;font-size:13px;font-weight:800;border:1.5px solid var(--navy);color:var(--navy);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}
+.amt{font-size:22px;color:var(--red)}
+.file{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:12px;padding:14px;cursor:pointer;background:#fff}
+.file input{position:absolute;opacity:0;width:1px;height:1px}
+.file .btnf{flex:none;background:var(--navy);color:#fff;border-radius:9px;padding:9px 14px;font-weight:800;font-size:14.5px}
+.file .fn{color:var(--muted);font-weight:600;font-size:14.5px;word-break:break-all}
+.file.has{border-style:solid;border-color:var(--ok)}
+.file.has .fn{color:var(--ok);font-weight:800}
+.q.invalid .file{border-color:var(--red)}
 /* done */
 #done{display:none;padding:56px 0 80px;text-align:center}
 #done .tick{width:72px;height:72px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 18px}
@@ -220,8 +235,23 @@ button[disabled]{opacity:.6;cursor:wait}
       </div><div class="err">Sila pilih satu.</div></div>
   </div>
 
+  <div class="sec">
+    <h2><span class="n">5</span>Yuran komitmen</h2>
+    <p class="hint">Yuran komitmen <b>RM10</b> bagi mengesahkan tempat anda. Sila buat bayaran dan muat naik resit di bawah.</p>
+    <div class="bank">
+      <div class="row"><span>Jumlah</span><b class="amt">RM10.00</b></div>
+      <div class="row"><span>Bank</span><b>Maybank</b></div>
+      <div class="row"><span>Nama akaun</span><b>Persatuan Advokasi Pendengaran Malaysia</b></div>
+      <div class="row"><span>No. akaun</span><b class="acc"><span id="accno" style="color:var(--ink)">5622 6351 8168</span><button type="button" class="copy" id="cp">Salin</button></b></div>
+      <div class="row"><span>Rujukan</span><b>PKI2026 + nama anda</b></div>
+    </div>
+    <div class="q" id="q-resit"><span class="l">Muat naik resit bayaran <span class="req">*</span><small>Gambar (JPG/PNG) atau PDF, maksimum 5MB.</small></span>
+      <label class="file" id="fbox"><input type="file" id="resit" accept="image/*,application/pdf"><span class="btnf">Pilih fail</span><span class="fn" id="fn">Tiada fail dipilih</span></label>
+      <div class="err" id="resit-err">Sila muat naik resit bayaran.</div></div>
+  </div>
+
   <div class="sec consent">
-    <h2><span class="n">5</span>Persetujuan</h2>
+    <h2><span class="n">6</span>Persetujuan</h2>
     <p class="hint" style="color:var(--ink)">Maklumat ini digunakan untuk pengurusan program sahaja. Gambar mungkin diambil sepanjang program untuk tujuan dokumentasi.</p>
     <div class="q" data-group="persetujuan"><div class="opts" role="radiogroup" aria-label="Persetujuan">
         <label class="opt" style="background:#fff"><input type="radio" name="persetujuan" value="Bersetuju (termasuk gambar)">Saya bersetuju</label>
@@ -266,12 +296,48 @@ function check(){
     mark(q, !f.querySelector('[name="'+q.dataset.group+'"]:checked'));
   });
   LK.forEach(k => mark(document.getElementById('lk-'+k), !val('lk_'+k)));
+  mark(document.getElementById('q-resit'), !resitFile);
   if (first) { first.scrollIntoView({behavior:'smooth', block:'center'}); const i = first.querySelector('input,select'); if (i) i.focus({preventScroll:true}); }
   return !first;
 }
+
+const resitIn = document.getElementById('resit');
+let resitFile = null;
+document.getElementById('cp').addEventListener('click', e => {
+  const b = e.currentTarget;
+  navigator.clipboard && navigator.clipboard.writeText('562263518168').then(() => { b.textContent = 'Disalin ✓'; setTimeout(() => b.textContent = 'Salin', 1800); });
+});
+resitIn.addEventListener('change', () => {
+  const file = resitIn.files[0]; const q = document.getElementById('q-resit');
+  const err = document.getElementById('resit-err');
+  resitFile = null; document.getElementById('fbox').classList.remove('has');
+  document.getElementById('fn').textContent = 'Tiada fail dipilih';
+  if (!file) return;
+  if (file.size > 5*1024*1024) { err.textContent = 'Fail melebihi 5MB. Sila pilih fail yang lebih kecil.'; q.classList.add('invalid'); return; }
+  err.textContent = 'Sila muat naik resit bayaran.';
+  resitFile = file; q.classList.remove('invalid');
+  document.getElementById('fbox').classList.add('has');
+  document.getElementById('fn').textContent = '✓ ' + file.name;
+});
+function readResit(file){
+  return new Promise((ok, no) => {
+    if (file.type.startsWith('image/') && file.type !== 'image/gif') {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const s = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok({name: file.name.replace(/\.[^.]+$/, '') + '.jpg', mime: 'image/jpeg', data: c.toDataURL('image/jpeg', .82).split(',')[1]});
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); fallback(); };
+      img.src = url;
+    } else fallback();
+    function fallback(){ const r = new FileReader(); r.onload = () => ok({name: file.name, mime: file.type || 'application/octet-stream', data: String(r.result).split(',')[1]}); r.onerror = no; r.readAsDataURL(file); }
+  });
+}
 f.addEventListener('change', e => { const q = e.target.closest('.invalid'); if (q) q.classList.remove('invalid'); });
 
-f.addEventListener('submit', e => {
+f.addEventListener('submit', async e => {
   e.preventDefault();
   if (!check()) return;
   const data = {
@@ -297,6 +363,13 @@ f.addEventListener('submit', e => {
   };
   const btn = document.getElementById('btn');
   btn.disabled = true; btn.textContent = 'Menghantar…';
+  try {
+    const r = await readResit(resitFile);
+    data.yuran = 'RM10'; data.resit_nama = r.name; data.resit_mime = r.mime; data.resit_data = r.data;
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Hantar pendaftaran';
+    alert('Resit tidak dapat dibaca. Sila pilih semula fail resit.'); return;
+  }
   document.getElementById('payload').value = JSON.stringify(data);
   document.getElementById('gasForm').submit();
   setTimeout(() => {
