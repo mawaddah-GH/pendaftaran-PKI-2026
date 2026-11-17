@@ -129,8 +129,8 @@ button[disabled]{opacity:.6;cursor:wait}
       <div class="fact"><b>Tarikh</b><span>Sabtu, 19 Disember 2026</span></div>
       <div class="fact"><b>Masa</b><span>9.00 pagi – 4.30 petang</span></div>
       <div class="fact"><b>Tempat</b><span>Hotel Olympic Malaysia, Kuala Lumpur</span></div>
-      <div class="fact"><b>Nilai tajaan</b><span>RM200 seorang</span></div>
-      <div class="fact"><b>Yuran komitmen</b><span>RM10 sahaja</span></div>
+      <div class="fact"><b>Ahli HEAR ME</b><span>RM10 sahaja (ditaja, nilai RM200)</span></div>
+      <div class="fact"><b>Bukan ahli</b><span>RM200 seorang</span></div>
     </div>
     <div class="badge"><em>Hanya 10 ditaja penuh</em> Jom grab sekarang!</div>
   </div>
@@ -237,10 +237,10 @@ button[disabled]{opacity:.6;cursor:wait}
   </div>
 
   <div class="sec">
-    <h2><span class="n">5</span>Yuran komitmen</h2>
-    <p class="hint">Nilai sebenar program ialah <b>RM200 seorang</b> dan ditaja sepenuhnya. Anda hanya perlu membayar yuran komitmen <b>RM10</b> untuk mengesahkan tempat. Sila buat bayaran dan muat naik resit di bawah.</p>
+    <h2><span class="n">5</span>Yuran</h2>
+    <p class="hint" id="yuran-hint">Tajaan penuh (nilai RM200) untuk <b>ahli HEAR ME</b> sahaja. Ahli bayar yuran komitmen <b>RM10</b>, bukan ahli bayar yuran penuh <b>RM200</b>. Jawab soalan "Adakah anda ahli HEAR ME?" di Bahagian 2 untuk melihat jumlah anda.</p>
     <div class="bank">
-      <div class="row"><span>Jumlah</span><b class="amt">RM10.00</b></div>
+      <div class="row"><span>Jumlah</span><b class="amt" id="amt">Pilih status keahlian dahulu</b></div>
       <div class="row"><span>Bank</span><b>Maybank Islamic</b></div>
       <div class="row"><span>Nama akaun</span><b>Persatuan Ibubapa Anak Masalah Pendengaran Malaysia</b></div>
       <div class="row"><span>No. akaun</span><b class="acc"><span id="accno" style="color:var(--ink)">5622 6351 8168</span><button type="button" class="copy" id="cp">Salin</button></b></div>
@@ -302,6 +302,15 @@ function check(){
   return !first;
 }
 
+
+function yuranNow(){ const a = val('ahli'); return a === 'Ya' ? 'RM10' : a === 'Tidak' ? 'RM200' : a === 'Tidak pasti' ? 'Belum pasti (semak keahlian)' : ''; }
+function updYuran(){
+  const a = val('ahli'), amt = document.getElementById('amt'), h = document.getElementById('yuran-hint');
+  if (a === 'Ya') { amt.textContent = 'RM10.00'; h.innerHTML = 'Anda <b>ahli HEAR ME</b>: tempat anda ditaja penuh (nilai RM200). Bayar yuran komitmen <b>RM10</b> sahaja dan muat naik resit di bawah.'; }
+  else if (a === 'Tidak') { amt.textContent = 'RM200.00'; h.innerHTML = 'Tajaan penuh untuk ahli HEAR ME sahaja. Sebagai <b>bukan ahli</b>, yuran penyertaan ialah <b>RM200</b>. Sila bayar dan muat naik resit di bawah.'; }
+  else if (a === 'Tidak pasti') { amt.textContent = 'RM10 (ahli) / RM200 (bukan ahli)'; h.innerHTML = 'Sila semak status keahlian anda dengan admin HEAR ME (WhatsApp <b>019-757 5364</b>) <b>sebelum</b> membuat bayaran. Ahli: RM10. Bukan ahli: RM200.'; }
+}
+document.querySelectorAll('input[name="ahli"]').forEach(r => r.addEventListener('change', updYuran));
 const resitIn = document.getElementById('resit');
 let resitFile = null;
 document.getElementById('cp').addEventListener('click', e => {
@@ -366,7 +375,7 @@ f.addEventListener('submit', async e => {
   btn.disabled = true; btn.textContent = 'Menghantar…';
   try {
     const r = await readResit(resitFile);
-    data.yuran = 'RM10'; data.resit_nama = r.name; data.resit_mime = r.mime; data.resit_data = r.data;
+    data.yuran = yuranNow(); data.resit_nama = r.name; data.resit_mime = r.mime; data.resit_data = r.data;
   } catch (err) {
     btn.disabled = false; btn.textContent = 'Hantar pendaftaran';
     alert('Resit tidak dapat dibaca. Sila pilih semula fail resit.'); return;
