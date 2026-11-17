@@ -94,6 +94,11 @@ button[disabled]{opacity:.6;cursor:wait}
 .file.has{border-style:solid;border-color:var(--ok)}
 .file.has .fn{color:var(--ok);font-weight:800}
 .q.invalid .file{border-color:var(--red)}
+.joinbox{margin-top:12px;background:#FFF8E1;border:1.5px solid #F5C842;border-radius:12px;padding:14px 16px;font-size:14.5px;line-height:1.5}
+.joinbox p{margin:0 0 10px}
+.joinbtns{display:grid;gap:8px}
+.jb{display:block;text-align:center;background:var(--navy);color:#fff;text-decoration:none;font-weight:800;border-radius:10px;padding:11px 14px}
+.jb.wa{background:#25D366;color:#0b3d1f}
 /* done */
 #done{display:none;padding:56px 0 80px;text-align:center}
 #done .tick{width:72px;height:72px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin:0 auto 18px}
@@ -171,10 +176,17 @@ button[disabled]{opacity:.6;cursor:wait}
 
     <div class="q" data-group="ahli"><span class="l" id="l-ahli">Adakah anda ahli HEAR ME? <span class="req">*</span></span>
       <div class="opts" role="radiogroup" aria-labelledby="l-ahli">
-        <label class="opt"><input type="radio" name="ahli" value="Ya">Ya</label>
-        <label class="opt"><input type="radio" name="ahli" value="Tidak">Tidak</label>
-        <label class="opt"><input type="radio" name="ahli" value="Tidak pasti">Tidak pasti</label>
-      </div><div class="err">Sila pilih satu.</div></div>
+        <label class="opt"><input type="radio" name="ahli" value="Ya">Ya, saya ahli</label>
+        <label class="opt"><input type="radio" name="ahli" value="Belum - daftar ahli">Belum, saya nak daftar jadi ahli</label>
+        <label class="opt"><input type="radio" name="ahli" value="Tidak">Tidak, saya bukan ahli</label>
+      </div><div class="err">Sila pilih satu.</div>
+      <div class="joinbox" id="joinbox" hidden>
+        <p><b>Tajaan penuh untuk ahli HEAR ME sahaja.</b> Sila daftar sebagai ahli HEAR ME dahulu, kemudian sambung borang ini dan bayar yuran komitmen <b>RM10</b>. Admin akan sahkan keahlian anda sebelum program.</p>
+        <div class="joinbtns">
+          <a class="jb" href="https://www.hearmemalaysia.com.my" target="_blank" rel="noopener">Daftar ahli di website HEAR ME</a>
+          <a class="jb wa" href="https://wa.me/60197575364?text=Assalamualaikum%2C%20saya%20nak%20daftar%20ahli%20HEAR%20ME%20untuk%20PPKI%202026" target="_blank" rel="noopener">WhatsApp admin</a>
+        </div>
+      </div></div>
   </div>
 
   <div class="sec">
@@ -303,12 +315,13 @@ function check(){
 }
 
 
-function yuranNow(){ const a = val('ahli'); return a === 'Ya' ? 'RM10' : a === 'Tidak' ? 'RM200' : a === 'Tidak pasti' ? 'Belum pasti (semak keahlian)' : ''; }
+function yuranNow(){ const a = val('ahli'); return a === 'Ya' ? 'RM10 - Ahli' : a === 'Tidak' ? 'RM200 - Bukan ahli' : a ? 'RM10 - Ahli baru (semak)' : ''; }
 function updYuran(){
   const a = val('ahli'), amt = document.getElementById('amt'), h = document.getElementById('yuran-hint');
+  document.getElementById('joinbox').hidden = !(a && a !== 'Ya' && a !== 'Tidak');
   if (a === 'Ya') { amt.textContent = 'RM10.00'; h.innerHTML = 'Anda <b>ahli HEAR ME</b>: tempat anda ditaja penuh (nilai RM200). Bayar yuran komitmen <b>RM10</b> sahaja dan muat naik resit di bawah.'; }
   else if (a === 'Tidak') { amt.textContent = 'RM200.00'; h.innerHTML = 'Tajaan penuh untuk ahli HEAR ME sahaja. Sebagai <b>bukan ahli</b>, yuran penyertaan ialah <b>RM200</b>. Sila bayar dan muat naik resit di bawah.'; }
-  else if (a === 'Tidak pasti') { amt.textContent = 'RM10 (ahli) / RM200 (bukan ahli)'; h.innerHTML = 'Sila semak status keahlian anda dengan admin HEAR ME (WhatsApp <b>019-757 5364</b>) <b>sebelum</b> membuat bayaran. Ahli: RM10. Bukan ahli: RM200.'; }
+  else if (a) { amt.textContent = 'RM10.00'; h.innerHTML = 'Selepas mendaftar sebagai <b>ahli HEAR ME</b>, bayar yuran komitmen <b>RM10</b> dan muat naik resit di bawah. Tajaan tertakluk kepada pengesahan keahlian oleh admin.'; }
 }
 document.querySelectorAll('input[name="ahli"]').forEach(r => r.addEventListener('change', updYuran));
 const resitIn = document.getElementById('resit');
