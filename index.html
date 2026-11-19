@@ -98,6 +98,7 @@ button[disabled]{opacity:.6;cursor:wait}
 .joinbox p{margin:0 0 10px}
 .joinbtns{display:grid;gap:8px}
 .jb{display:block;text-align:center;background:var(--navy);color:#fff;text-decoration:none;font-weight:800;border-radius:10px;padding:11px 14px}
+.savenote{font-size:.82em;color:#6b5a1e;margin:6px 0 10px}
 .jb.wa{background:#25D366;color:#0b3d1f}
 /* done */
 #done{display:none;padding:56px 0 80px;text-align:center}
@@ -182,8 +183,9 @@ button[disabled]{opacity:.6;cursor:wait}
       </div><div class="err">Sila pilih satu.</div>
       <div class="joinbox" id="joinbox" hidden>
         <p><b>Tajaan penuh untuk ahli HEAR ME sahaja.</b> Sila daftar sebagai ahli HEAR ME dahulu, kemudian sambung borang ini dan bayar yuran komitmen <b>RM10</b>. Admin akan sahkan keahlian anda sebelum program.</p>
+        <p class="savenote">Jawapan anda disimpan. Selepas daftar ahli, buka semula pautan borang ini untuk sambung.</p>
         <div class="joinbtns">
-          <a class="jb" href="https://www.hearmemalaysia.com.my" target="_blank" rel="noopener">Daftar ahli di website HEAR ME</a>
+          <a class="jb" id="webAhli" href="https://www.hearmemalaysia.com.my">Daftar ahli di website HEAR ME</a>
           <a class="jb wa" href="https://wa.me/60197575364?text=Assalamualaikum%2C%20saya%20nak%20daftar%20ahli%20HEAR%20ME%20untuk%20PPKI%202026" target="_blank" rel="noopener">WhatsApp admin</a>
         </div>
       </div></div>
@@ -358,6 +360,33 @@ function readResit(file){
     function fallback(){ const r = new FileReader(); r.onload = () => ok({name: file.name, mime: file.type || 'application/octet-stream', data: String(r.result).split(',')[1]}); r.onerror = no; r.readAsDataURL(file); }
   });
 }
+// Simpan draf supaya jawapan tidak hilang bila keluar ke website HEAR ME
+const DK = 'pki2026-draf';
+function saveDraft(){
+  try {
+    const d = {};
+    f.querySelectorAll('input,select,textarea').forEach(el => {
+      if (!el.name || el.type === 'file' || el.type === 'hidden') return;
+      if (el.type === 'radio' || el.type === 'checkbox') { if (el.checked) (d[el.name] = d[el.name] || []).push(el.value); }
+      else d[el.name] = el.value;
+    });
+    localStorage.setItem(DK, JSON.stringify(d));
+  } catch (e) {}
+}
+(function loadDraft(){
+  try {
+    const d = JSON.parse(localStorage.getItem(DK) || 'null'); if (!d) return;
+    f.querySelectorAll('input,select,textarea').forEach(el => {
+      if (!el.name || !(el.name in d) || el.type === 'file' || el.type === 'hidden') return;
+      if (el.type === 'radio' || el.type === 'checkbox') el.checked = [].concat(d[el.name]).includes(el.value);
+      else el.value = d[el.name];
+    });
+    updYuran();
+  } catch (e) {}
+})();
+f.addEventListener('input', saveDraft);
+f.addEventListener('change', saveDraft);
+document.getElementById('webAhli').addEventListener('click', saveDraft);
 f.addEventListener('change', e => { const q = e.target.closest('.invalid'); if (q) q.classList.remove('invalid'); });
 
 f.addEventListener('submit', async e => {
@@ -395,6 +424,7 @@ f.addEventListener('submit', async e => {
   }
   document.getElementById('payload').value = JSON.stringify(data);
   document.getElementById('gasForm').submit();
+  try { localStorage.removeItem(DK); } catch (e) {}
   setTimeout(() => {
     document.getElementById('dn').textContent = data.nama;
     f.style.display = 'none';
